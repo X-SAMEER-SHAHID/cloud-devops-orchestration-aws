@@ -1,11 +1,6 @@
 # ⚡ TaskFlow — Containerized Web Application on AWS
 
-> **Course:** DevOps for Cloud Computing (CSC418)  
-> **Institution:** COMSATS University Islamabad, Lahore Campus  
-> **Program:** BS Software Engineering (BS-SE) — 7th Semester  
-> **Topic:** Lab Mid Examination: EC2 Deployment, Docker Compose, Auto Scaling, Load Balancing & Selenium WebDriver  
 
----
 
 ## 📖 Table of Contents
 1. [Project Overview](#project-overview)
