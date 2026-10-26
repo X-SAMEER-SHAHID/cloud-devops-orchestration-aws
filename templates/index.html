@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TaskFlow – DevOps Midterm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="bg-animation">
+    <div class="blob blob1"></div>
+    <div class="blob blob2"></div>
+    <div class="blob blob3"></div>
+  </div>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">⚡</span>
+        <div>
+          <h1>TaskFlow</h1>
+          <p class="subtitle">AWS DevOps Midterm – Containerized App</p>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat-card">
+          <span class="stat-num">{{ tasks|length }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num">{{ tasks|selectattr('completed')|list|length }}</span>
+          <span class="stat-label">Done</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num">{{ tasks|rejectattr('completed')|list|length }}</span>
+          <span class="stat-label">Pending</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Add Task Form -->
+    <div class="card form-card">
+      <h2 class="card-title">Add New Task</h2>
+      <form action="/add" method="POST" class="task-form" id="addTaskForm">
+        <div class="input-group">
+          <input type="text" name="title" id="taskTitle" placeholder="Task title..." required autocomplete="off" />
+          <textarea name="description" id="taskDesc" placeholder="Description (optional)..." rows="2"></textarea>
+        </div>
+        <button type="submit" class="btn-primary" id="addBtn">
+          <span>+ Add Task</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Task List -->
+    <div class="card tasks-card">
+      <h2 class="card-title">My Tasks</h2>
+      {% if tasks %}
+        <ul class="task-list" id="taskList">
+          {% for task in tasks %}
+          <li class="task-item {% if task.completed %}completed{% endif %}" id="task-{{ task.id }}">
+            <div class="task-left">
+              <a href="/toggle/{{ task.id }}" class="checkbox {% if task.completed %}checked{% endif %}" title="Toggle complete">
+                {% if task.completed %}✓{% endif %}
+              </a>
+              <div class="task-content">
+                <span class="task-title">{{ task.title }}</span>
+                {% if task.description %}
+                  <span class="task-desc">{{ task.description }}</span>
+                {% endif %}
+                <span class="task-date">{{ task.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+              </div>
+            </div>
+            <div class="task-actions">
+              <a href="/delete/{{ task.id }}" class="btn-delete" onclick="return confirm('Delete this task?')" id="delete-{{ task.id }}">🗑</a>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="empty-state">
+          <span class="empty-icon">📋</span>
+          <p>No tasks yet. Add your first task above!</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>CSC418 – DevOps for Cloud Computing &nbsp;|&nbsp; Powered by Flask + PostgreSQL + Docker + AWS</p>
+    </footer>
+  </div>
+
+  <script>
+    // Animate task items on load
+    document.querySelectorAll('.task-item').forEach((item, i) => {
+      item.style.animationDelay = `${i * 0.05}s`;
+      item.classList.add('fade-in');
+    });
+
+    // Form submission animation
+    document.getElementById('addTaskForm').addEventListener('submit', function() {
+      document.getElementById('addBtn').innerHTML = '<span>Adding...</span>';
+    });
+  </script>
+</body>
+</html>

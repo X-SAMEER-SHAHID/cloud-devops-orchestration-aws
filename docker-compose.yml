@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # ─────────────────────────────────────
+  # PostgreSQL Database Service
+  # ─────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: taskflow_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: taskdb
+      POSTGRES_USER: taskuser
+      POSTGRES_PASSWORD: taskpass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data   # Named volume for persistence
+    ports:
+      - "5432:5432"
+    networks:
+      - taskflow_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskuser -d taskdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ─────────────────────────────────────
+  # Flask Web Application Service
+  # ─────────────────────────────────────
+  web:
+    build: .
+    container_name: taskflow_web
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: postgresql://taskuser:taskpass@db:5432/taskdb
+    depends_on:
+      db:
+        condition: service_healthy   # Wait for DB to be ready
+    networks:
+      - taskflow_net
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5000/health')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# ─────────────────────────────────────
+# Named Volumes (data persists even
+# if containers are stopped/deleted)
+# ─────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+
+# ─────────────────────────────────────
+# Custom Network
+# ─────────────────────────────────────
+networks:
+  taskflow_net:
+    driver: bridge
