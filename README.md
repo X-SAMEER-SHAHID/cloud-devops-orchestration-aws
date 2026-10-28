@@ -33,6 +33,54 @@ The infrastructure is deployed on **Amazon Web Services (AWS)** behind an **Appl
 
 ## 🏛️ Architecture Diagram
 
+<p align="center">
+  <img src="architecture.jpg" alt="TaskFlow AWS System Architecture" width="100%" />
+</p>
+
+### 📊 Interactive Flow Diagram (Mermaid)
+
+```mermaid
+graph TD
+    Client["🌐 End User / Selenium Test Suite"]
+    Client -->|HTTP Port 80| ALB["⚖️ AWS Application Load Balancer<br/><code>taskflow-alb</code>"]
+
+    subgraph AWS_Cloud ["☁️ AWS Cloud Infrastructure (us-east-1)"]
+        ALB -->|Forward :5000| TG["🎯 Target Group: taskflow-tg<br/>Health Check: HTTP 5000 /health"]
+
+        subgraph ASG ["🔄 Auto Scaling Group: taskflow-asg (Min: 1, Desired: 2, Max: 3)"]
+            subgraph EC2_1 ["🖥️ EC2 Instance 1 (us-east-1a)"]
+                subgraph Docker_1 ["🐳 Docker Engine"]
+                    Web_1["🐍 Flask Web App (Gunicorn)<br/>Port :5000"]
+                    DB_1["🐘 PostgreSQL 15<br/>Port :5432"]
+                    Vol_1[("💾 Volume: postgres_data")]
+
+                    Web_1 <-->|"taskflow_net"| DB_1
+                    DB_1 --- Vol_1
+                end
+            end
+
+            subgraph EC2_2 ["🖥️ EC2 Instance 2 (us-east-1b)"]
+                subgraph Docker_2 ["🐳 Docker Engine"]
+                    Web_2["🐍 Flask Web App (Gunicorn)<br/>Port :5000"]
+                    DB_2["🐘 PostgreSQL 15<br/>Port :5432"]
+                    Vol_2[("💾 Volume: postgres_data")]
+
+                    Web_2 <-->|"taskflow_net"| DB_2
+                    DB_2 --- Vol_2
+                end
+            end
+        end
+
+        TG -->|HTTP :5000| Web_1
+        TG -->|HTTP :5000| Web_2
+
+        GoldenAMI["📦 Custom Golden AMI<br/>(Docker + App Pre-baked)"] -.->|Deploys| ASG
+        LT["📋 Launch Template<br/>(User Data Bootstrap)"] -.->|Provisions| ASG
+    end
+```
+
+### 📋 ASCII Topology View
+
 ```
                         ┌────────────────────────────────────────────────────────┐
                         │             End User / Selenium Test Suite             │
